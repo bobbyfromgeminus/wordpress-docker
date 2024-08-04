@@ -1,0 +1,53 @@
+services:
+
+  app:
+    depends_on:
+      - database
+    image: wordpress:6.6.1-php8.1-apache
+    volumes:
+      - ./app:/var/www/html
+    ports:
+      - "8080:80"
+    networks:
+      - mynetwork
+    env_file:
+      - .env
+    environment:
+      WORDPRESS_DB_HOST: database:3306
+      WORDPRESS_DB_USER: '${MYSQL_USER}'
+      WORDPRESS_DB_PASSWORD: '${MYSQL_PASSWORD}'
+      WORDPRESS_DB_NAME: '${MYSQL_DATABASE}'
+
+
+  database:
+    image: mariadb:10.11
+    command: '--default-authentication-plugin=mysql_native_password'
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
+      MYSQL_DATABASE: '${MYSQL_DATABASE}'
+      MYSQL_USER: '${MYSQL_USER}'
+      MYSQL_PASSWORD: '${MYSQL_PASSWORD}'
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - mynetwork
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - 8081:80
+    environment:
+      PMA_HOST: database
+    depends_on:
+      - database
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge
+
+volumes:
+  mariadb_data:
